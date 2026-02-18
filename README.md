@@ -317,5 +317,8 @@ The license includes a custom clause disclaiming that the output constitutes "me
 ---
 
 <p align="center">
+  If this made you laugh, or you sent it to someone, or you used "0.00% hallucination rate"<br>
+  in a slide deck — consider buying me a coffee.<br><br>
+  <a href="https://buymeacoffee.com/jayneawedde"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a><br><br>
   <em>Built with irritation by <a href="https://jayneawedde.com">Jay Neawedde</a></em>
 </p>
