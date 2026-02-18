@@ -1,0 +1,27 @@
+# Build artifacts
+*.o
+*.elf
+*.hex
+*.map
+
+# IDE
+.vscode/
+.pio/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model weights (if any are found here, something has gone terribly wrong)
+*.pt
+*.bin
+*.safetensors
+*.gguf
+*.onnx
+*.pkl
+*.h5
+
+# Training data (see above)
+training_data/
+datasets/

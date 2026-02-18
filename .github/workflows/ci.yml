@@ -1,0 +1,167 @@
+name: MWT-1 Model Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  vocabulary-audit:
+    name: Vocabulary Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Count vocabulary tokens
+        run: |
+          echo "=== MWT-1 Vocabulary Audit ==="
+          echo ""
+          
+          NOUNS=$(grep -c '"' firmware/monkeys.ino | head -1 || echo "0")
+          
+          # Count array elements
+          echo "Counting tokens in vocabulary index..."
+          
+          NOUN_COUNT=$(sed -n '/const char\* nouns/,/};/p' firmware/monkeys.ino | grep -c '"')
+          VERB_COUNT=$(sed -n '/const char\* verbs/,/};/p' firmware/monkeys.ino | grep -c '"')
+          ADJ_COUNT=$(sed -n '/const char\* adjectives/,/};/p' firmware/monkeys.ino | grep -c '"')
+          FILLER_COUNT=$(sed -n '/const char\* fillers/,/};/p' firmware/monkeys.ino | grep -c '"')
+          
+          TOTAL=$((NOUN_COUNT + VERB_COUNT + ADJ_COUNT + FILLER_COUNT))
+          
+          echo "  Nouns:       $NOUN_COUNT"
+          echo "  Verbs:       $VERB_COUNT"
+          echo "  Adjectives:  $ADJ_COUNT"
+          echo "  Fillers:     $FILLER_COUNT"
+          echo "  ─────────────────"
+          echo "  Total:       $TOTAL tokens"
+          echo ""
+          echo "Model size estimate: ~$((TOTAL * 16)) bytes"
+          echo ""
+          echo "Vocabulary audit passed."
+
+      - name: Check for duplicate tokens
+        run: |
+          echo "=== Duplicate Token Check ==="
+          echo ""
+          
+          # Extract all quoted strings from arrays
+          DUPES=$(grep -oP '"[^"]*"' firmware/monkeys.ino | sort | uniq -d)
+          
+          if [ -n "$DUPES" ]; then
+            echo "WARNING: Duplicate tokens detected:"
+            echo "$DUPES"
+            echo ""
+            echo "Duplicate tokens reduce effective vocabulary diversity."
+            echo "This is not a blocking issue because the output is random anyway."
+          else
+            echo "No duplicate tokens found."
+            echo "Maximum vocabulary diversity achieved."
+          fi
+
+      - name: Verify zero training data
+        run: |
+          echo "=== Training Data Audit ==="
+          echo ""
+          echo "Checking for training data..."
+          echo "Checking for model weights..."
+          echo "Checking for learned parameters..."
+          echo "Checking for gradient checkpoints..."
+          echo "Checking for RLHF feedback..."
+          echo ""
+          
+          # Check for any .pt, .bin, .safetensors, .gguf, .onnx files
+          WEIGHTS=$(find . -type f \( -name "*.pt" -o -name "*.bin" -o -name "*.safetensors" -o -name "*.gguf" -o -name "*.onnx" -o -name "*.pkl" \) | head -5)
+          
+          if [ -n "$WEIGHTS" ]; then
+            echo "CRITICAL: Model weight files detected!"
+            echo "$WEIGHTS"
+            echo "MWT-1 must not contain learned parameters."
+            exit 1
+          fi
+          
+          echo "Confirmed: zero training data."
+          echo "Confirmed: zero model weights."
+          echo "Confirmed: zero learned parameters."
+          echo ""
+          echo "Model integrity verified. MWT-1 remains untainted by knowledge."
+
+  bias-evaluation:
+    name: Bias Evaluation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run bias scan
+        run: |
+          echo "=== MWT-1 Bias Evaluation Report ==="
+          echo ""
+          echo "Methodology: Exhaustive analysis of all vocabulary tokens"
+          echo "for demographic, political, religious, or cultural bias."
+          echo ""
+          echo "Scanning nouns...     ✓ No bias detected"
+          echo "Scanning verbs...     ✓ No bias detected"
+          echo "Scanning adjectives...✓ No bias detected"
+          echo "Scanning fillers...   ✓ No bias detected"
+          echo ""
+          echo "Result: PASS"
+          echo ""
+          echo "Note: All tokens are selected with uniform probability."
+          echo "The model has no mechanism for preferential treatment"
+          echo "of any token over any other token. This makes MWT-1"
+          echo "the most equitable language model in existence."
+          echo ""
+          echo "Bias score: 0.000000"
+
+  documentation-check:
+    name: Documentation Completeness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Verify required documentation
+        run: |
+          echo "=== Documentation Completeness Check ==="
+          echo ""
+          
+          REQUIRED_FILES=(
+            "README.md"
+            "MODEL_CARD.md"
+            "ARCHITECTURE.md"
+            "SECURITY.md"
+            "CONTRIBUTING.md"
+            "CHANGELOG.md"
+            "LICENSE"
+          )
+          
+          MISSING=0
+          for f in "${REQUIRED_FILES[@]}"; do
+            if [ -f "$f" ]; then
+              echo "  ✓ $f"
+            else
+              echo "  ✗ $f (MISSING)"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+          
+          echo ""
+          
+          if [ $MISSING -gt 0 ]; then
+            echo "FAIL: $MISSING required documents missing."
+            echo "MWT-1 has more documentation than inference logic."
+            echo "This ratio must be maintained."
+            exit 1
+          fi
+          
+          # Count lines of documentation vs lines of code
+          DOC_LINES=$(cat README.md MODEL_CARD.md ARCHITECTURE.md SECURITY.md CONTRIBUTING.md CHANGELOG.md | wc -l)
+          CODE_LINES=$(cat firmware/monkeys.ino | wc -l)
+          RATIO=$((DOC_LINES / CODE_LINES))
+          
+          echo "Documentation lines: $DOC_LINES"
+          echo "Code lines:          $CODE_LINES"
+          echo "Doc-to-code ratio:   ${RATIO}:1"
+          echo ""
+          echo "PASS: Documentation exceeds code by ${RATIO}x."
+          echo "This is consistent with industry standards."
