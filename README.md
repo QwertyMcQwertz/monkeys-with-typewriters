@@ -42,6 +42,10 @@ The model is a 342-token vocabulary and a call to `random()`. That's the archite
 
 The demo runs locally in your browser. It detects your hardware, shows your specs, and generates text using the same algorithm as the microcontroller. It recommends Chrome for optimal random number generation.
 
+<p align="center">
+  <img src="demo.gif" alt="MWT-1 Live Demo" width="800">
+</p>
+
 **[Try it live →](https://monkeyswithtypewriters.com)** *(coming soon)*
 
 ## 📊 Benchmarks
