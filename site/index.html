@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monkeys with Typewriters — On-Device AI Text Generation</title>
+    <meta name="description" content="Enterprise-grade text generation that runs on $3 hardware. Sub-millisecond inference. Zero cloud dependency. The future of edge AI.">
+    <meta property="og:title" content="Monkeys with Typewriters — On-Device AI Text Generation">
+    <meta property="og:description" content="Sub-millisecond inference on a $3 microcontroller. No GPU. No cloud. No training data. No problem.">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface-2: #1a1a28;
+            --border: #2a2a3d;
+            --text: #e8e8f0;
+            --text-dim: #8888a0;
+            --accent: #6c5ce7;
+            --accent-2: #a29bfe;
+            --green: #00b894;
+            --orange: #fdcb6e;
+            --pink: #fd79a8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+        
+        /* ── NAV ── */
+        nav {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+        }
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+        }
+        .logo span { color: var(--accent-2); }
+        nav a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-left: 28px;
+            transition: color 0.2s;
+        }
+        nav a:hover { color: var(--text); }
+        
+        /* ── HERO ── */
+        .hero {
+            padding: 120px 0 80px;
+            text-align: center;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--accent-2);
+            margin-bottom: 24px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent-2), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        .hero-cta {
+            display: inline-flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover { background: #5a4bd6; }
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--accent); }
+        
+        /* ── METRICS BAR ── */
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 80px auto;
+            max-width: 900px;
+        }
+        .metric {
+            background: var(--surface);
+            padding: 28px 20px;
+            text-align: center;
+        }
+        .metric .number {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+        .metric .number.green { color: var(--green); }
+        .metric .number.orange { color: var(--orange); }
+        .metric .number.pink { color: var(--pink); }
+        .metric .number.accent { color: var(--accent-2); }
+        .metric .label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* ── DEMO ── */
+        .demo {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 0 auto 80px;
+            max-width: 800px;
+        }
+        .demo-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .demo-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .demo-header span {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .demo-output {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: var(--accent-2);
+            min-height: 80px;
+            word-wrap: break-word;
+        }
+        .demo-meta {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .demo-btn {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            transition: border-color 0.2s;
+        }
+        .demo-btn:hover { border-color: var(--accent); }
+        
+        /* ── FEATURES ── */
+        .features {
+            padding: 80px 0;
+        }
+        .features h2 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .features .subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 60px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .feature {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            transition: border-color 0.2s;
+        }
+        .feature:hover { border-color: var(--accent); }
+        .feature .icon { font-size: 1.8rem; margin-bottom: 16px; }
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .feature p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        
+        /* ── COMPARISON ── */
+        .comparison {
+            padding: 80px 0;
+        }
+        .comparison h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .comparison .subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 48px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+        }
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        tr:last-child td { border-bottom: none; }
+        .winner { color: var(--green); font-weight: 600; }
+        .loser { color: var(--text-dim); }
+        
+        /* ── PRICING ── */
+        .pricing {
+            padding: 80px 0;
+        }
+        .pricing h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .pricing .subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 48px;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 940px;
+            margin: 0 auto;
+        }
+        .plan {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 36px 28px;
+            position: relative;
+        }
+        .plan.featured {
+            border-color: var(--accent);
+        }
+        .plan-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            padding: 4px 14px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+        .plan h3 { font-size: 1.2rem; margin-bottom: 8px; }
+        .plan .price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .plan .price span {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-dim);
+        }
+        .plan .desc {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .plan ul {
+            list-style: none;
+            margin-bottom: 28px;
+        }
+        .plan li {
+            font-size: 0.9rem;
+            padding: 6px 0;
+            color: var(--text-dim);
+        }
+        .plan li::before {
+            content: "✓ ";
+            color: var(--green);
+            font-weight: 700;
+        }
+        
+        /* ── TESTIMONIALS ── */
+        .testimonials {
+            padding: 80px 0;
+        }
+        .testimonials h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 48px;
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .testimonial {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+        }
+        .testimonial blockquote {
+            font-style: italic;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        .testimonial .author {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .testimonial .role {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* ── OPEN SOURCE ── */
+        .opensource {
+            padding: 80px 0;
+            text-align: center;
+        }
+        .opensource h2 {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .opensource p {
+            color: var(--text-dim);
+            max-width: 550px;
+            margin: 0 auto 32px;
+        }
+        .code-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            margin: 0 auto 32px;
+            text-align: left;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-2);
+            overflow-x: auto;
+        }
+        .code-block .comment { color: var(--text-dim); }
+        
+        /* ── FOOTER ── */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        footer a { color: var(--accent-2); text-decoration: none; }
+        footer .disclaimer {
+            margin-top: 16px;
+            font-size: 0.7rem;
+            color: #555;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 600px) {
+            .hero { padding: 80px 0 60px; }
+            .metrics-bar { grid-template-columns: repeat(2, 1fr); }
+            .demo-meta { flex-direction: column; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container">
+        <div class="logo">MWT<span>.</span></div>
+        <div>
+            <a href="#demo">Demo</a>
+            <a href="#features">Features</a>
+            <a href="#benchmarks">Benchmarks</a>
+            <a href="#pricing">Pricing</a>
+            <a href="https://github.com/QwertyMcQwertz/monkeys-with-typewriters">GitHub</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="container">
+        <div class="badge">Now Generally Available</div>
+        <h1>Text generation that runs on<br><span class="gradient">a $3 microcontroller.</span></h1>
+        <p>MWT-1 is a breakthrough language model that delivers sub-millisecond inference with zero cloud dependency. Deploy AI at the edge on hardware that costs less than a coffee.</p>
+        <div class="hero-cta">
+            <a href="https://github.com/QwertyMcQwertz/monkeys-with-typewriters" class="btn btn-primary">Get Started</a>
+            <a href="#demo" class="btn btn-outline">Live Demo</a>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="metrics-bar">
+        <div class="metric">
+            <div class="number green">&lt;1ms</div>
+            <div class="label">Inference Latency</div>
+        </div>
+        <div class="metric">
+            <div class="number orange">$3</div>
+            <div class="label">Hardware Cost</div>
+        </div>
+        <div class="metric">
+            <div class="number pink">0.5W</div>
+            <div class="label">Power Draw</div>
+        </div>
+        <div class="metric">
+            <div class="number accent">0.00%</div>
+            <div class="label">Hallucination Rate</div>
+        </div>
+    </div>
+</div>
+
+<section class="container" id="demo">
+    <div class="demo">
+        <div class="demo-header">
+            <div class="demo-dot"></div>
+            <span>mwt-1 inference server — 192.168.1.47:80/generate</span>
+        </div>
+        <div class="demo-output" id="output">
+            enterprise-grade synergy leverages the bleeding-edge paradigm. scalable infrastructure disrupts our next-generation ecosystem. the hyper-converged pipeline optimizes every mission-critical deliverable toward real-time convergence.
+        </div>
+        <div class="demo-meta">
+            <span>tokens: <span id="meta-tokens">24</span></span>
+            <span>inference: <span id="meta-time">0.847</span>ms</span>
+            <span>model: mwt-1</span>
+            <span>hardware: ESP8266 @ 160MHz</span>
+        </div>
+        <button class="demo-btn" onclick="runInference()">Run Inference</button>
+    </div>
+</section>
+
+<section class="features" id="features">
+    <div class="container">
+        <h2>Why MWT-1?</h2>
+        <p class="subtitle">Everything the industry promised. Actually delivered.</p>
+        <div class="feature-grid">
+            <div class="feature">
+                <div class="icon">⚡</div>
+                <h3>Sub-Millisecond Inference</h3>
+                <p>Our proprietary token selection algorithm delivers output faster than any transformer-based model. Not even close. We measured.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">🔒</div>
+                <h3>Zero Data Collection</h3>
+                <p>MWT-1 has never seen your data. It has never seen anyone's data. It has never seen any data at all. Privacy by architecture.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">🌱</div>
+                <h3>Carbon Neutral Inference</h3>
+                <p>At 0.5W, a single MWT-1 instance produces less CO2 per year than a housefly. Run AI without running the planet into the ground.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">🧠</div>
+                <h3>Zero Hallucinations</h3>
+                <p>MWT-1 cannot hallucinate because it has no concept of truth. It makes no claims about reality. A factual accuracy rate that fact-checkers can only dream of: N/A.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">📡</div>
+                <h3>Fully Air-Gapped</h3>
+                <p>Deploy in classified environments, submarines, bunkers, or locations with no internet. MWT-1 doesn't need the cloud. The cloud needs MWT-1.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">💰</div>
+                <h3>$3 Total Infrastructure</h3>
+                <p>No H100s. No cloud credits. No investor money. One WeMos D1 Mini from AliExpress. That's the whole data center.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="comparison" id="benchmarks">
+    <div class="container">
+        <h2>How We Compare</h2>
+        <p class="subtitle">Independent benchmarks. Real numbers. No asterisks.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>GPT-4o</th>
+                    <th>Claude Opus</th>
+                    <th>Llama 3</th>
+                    <th>MWT-1</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Inference Latency</td>
+                    <td class="loser">~800ms</td>
+                    <td class="loser">~1200ms</td>
+                    <td class="loser">~200ms</td>
+                    <td class="winner">&lt;1ms</td>
+                </tr>
+                <tr>
+                    <td>Hardware Cost</td>
+                    <td class="loser">N/A (API)</td>
+                    <td class="loser">N/A (API)</td>
+                    <td class="loser">~$30,000</td>
+                    <td class="winner">$3</td>
+                </tr>
+                <tr>
+                    <td>Power Consumption</td>
+                    <td class="loser">~1MW (datacenter)</td>
+                    <td class="loser">~1MW (datacenter)</td>
+                    <td class="loser">~300W</td>
+                    <td class="winner">0.5W</td>
+                </tr>
+                <tr>
+                    <td>Model Size</td>
+                    <td class="loser">~1.8T params</td>
+                    <td class="loser">Unknown</td>
+                    <td class="loser">70B params</td>
+                    <td class="winner">150 tokens</td>
+                </tr>
+                <tr>
+                    <td>Training Data</td>
+                    <td class="loser">Entire internet</td>
+                    <td class="loser">Entire internet</td>
+                    <td class="loser">15T tokens</td>
+                    <td class="winner">None</td>
+                </tr>
+                <tr>
+                    <td>Hallucination Rate</td>
+                    <td class="loser">~3-5%</td>
+                    <td class="loser">~2-4%</td>
+                    <td class="loser">~5-8%</td>
+                    <td class="winner">0.00%</td>
+                </tr>
+                <tr>
+                    <td>Bias</td>
+                    <td class="loser">Documented</td>
+                    <td class="loser">Documented</td>
+                    <td class="loser">Documented</td>
+                    <td class="winner">None (verified)</td>
+                </tr>
+                <tr>
+                    <td>Copyright Lawsuits</td>
+                    <td class="loser">Multiple</td>
+                    <td class="loser">Pending</td>
+                    <td class="loser">Pending</td>
+                    <td class="winner">0</td>
+                </tr>
+                <tr>
+                    <td>Usefulness</td>
+                    <td>High</td>
+                    <td>High</td>
+                    <td>High</td>
+                    <td class="winner">Comparable*</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="color: var(--text-dim); font-size: 0.75rem; margin-top: 12px; text-align: right;">* Depending on use case. MWT-1 excels at generating text. The text may not mean anything, but neither do most earnings calls.</p>
+    </div>
+</section>
+
+<section class="testimonials">
+    <div class="container">
+        <h2>What People Are Saying</h2>
+        <div class="testimonial-grid">
+            <div class="testimonial">
+                <blockquote>"We replaced our entire NLP pipeline with MWT-1 and honestly? Customers haven't noticed."</blockquote>
+                <div class="author">Director of AI</div>
+                <div class="role">Fortune 500 Retailer</div>
+            </div>
+            <div class="testimonial">
+                <blockquote>"The output quality is indistinguishable from our previous vendor's chatbot. We're saving $4.2M annually."</blockquote>
+                <div class="author">VP of Engineering</div>
+                <div class="role">Major Airline</div>
+            </div>
+            <div class="testimonial">
+                <blockquote>"I showed the board our AI roadmap and they were very impressed with the benchmarks. Nobody asked what it actually does."</blockquote>
+                <div class="author">Chief AI Officer</div>
+                <div class="role">Healthcare SaaS</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pricing" id="pricing">
+    <div class="container">
+        <h2>Pricing</h2>
+        <p class="subtitle">No per-token fees. No rate limits. No surprise invoices.</p>
+        <div class="pricing-grid">
+            <div class="plan">
+                <h3>Chimp</h3>
+                <div class="price">$0 <span>/mo</span></div>
+                <div class="desc">For individuals and small teams</div>
+                <ul>
+                    <li>1 typewriter (single board)</li>
+                    <li>Unlimited inference</li>
+                    <li>Full vocabulary access</li>
+                    <li>REST API</li>
+                    <li>Community support</li>
+                </ul>
+                <a href="https://github.com/QwertyMcQwertz/monkeys-with-typewriters" class="btn btn-outline" style="width:100%;text-align:center;">Flash Firmware</a>
+            </div>
+            <div class="plan featured">
+                <div class="plan-badge">Most Popular</div>
+                <h3>Gorilla</h3>
+                <div class="price">$9 <span>/mo</span></div>
+                <div class="desc">For teams that need more typewriters</div>
+                <ul>
+                    <li>Unlimited typewriters</li>
+                    <li>Load-balanced inference</li>
+                    <li>Custom vocabulary modules</li>
+                    <li>Prometheus metrics endpoint</li>
+                    <li>Priority support</li>
+                </ul>
+                <a href="#" class="btn btn-primary" style="width:100%;text-align:center;">Coming Soon</a>
+            </div>
+            <div class="plan">
+                <h3>Shakespeare</h3>
+                <div class="price">Custom</div>
+                <div class="desc">For when you need it to accidentally write Hamlet</div>
+                <ul>
+                    <li>Everything in Gorilla</li>
+                    <li>Dedicated monkey consultant</li>
+                    <li>SLA: we guarantee text will be generated</li>
+                    <li>Compliance documentation*</li>
+                    <li>On-prem deployment support</li>
+                </ul>
+                <a href="mailto:jamesneawedde@protonmail.com" class="btn btn-outline" style="width:100%;text-align:center;">Contact Sales</a>
+            </div>
+        </div>
+        <p style="color: #555; font-size: 0.7rem; margin-top: 20px; text-align: center;">* Compliance documentation states: "It generates random text on a microcontroller." This has passed every audit we've submitted it to.</p>
+    </div>
+</section>
+
+<section class="opensource">
+    <div class="container">
+        <h2>100% Open Source</h2>
+        <p>The entire model, training pipeline (N/A), and inference engine. 47 lines of C that VCs would value at $200M if we put "AI" in the pitch deck.</p>
+        <div class="code-block">
+            <span class="comment">// The entire inference engine</span><br>
+            int pattern = random(0, 5);<br>
+            output += adjectives[random(0, NUM_ADJ)];<br>
+            output += " ";<br>
+            output += nouns[random(0, NUM_NOUNS)];<br>
+            <span class="comment">// That's it. That's the model.</span>
+        </div>
+        <a href="https://github.com/QwertyMcQwertz/monkeys-with-typewriters" class="btn btn-primary">View on GitHub</a>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <p>Built with irritation by <a href="https://jayneawedde.com">Jay Neawedde</a></p>
+        <p class="disclaimer">
+            Monkeys with Typewriters is a satirical project. MWT-1 generates random text using a 150-token vocabulary on a $3 ESP8266 microcontroller.
+            It is not artificial intelligence. It is not machine learning. It is a random number generator with a vocabulary list.
+            Every metric on this page is technically true. Think about that the next time someone shows you an AI benchmark.
+        </p>
+    </div>
+</footer>
+
+<script>
+const nouns = ["synergy","pipeline","blockchain","algorithm","framework","ecosystem","paradigm","bandwidth","deliverable","stakeholder","innovation","disruption","optimization","transformation","scalability","infrastructure","architecture","deployment","integration","convergence","leverage","vertical","platform","solution","engagement","throughput","milestone","trajectory","alignment","methodology","cloud","matrix","catalyst","roadmap","initiative","monetization","intelligence","model","network","inference"];
+const verbs = ["disrupts","leverages","optimizes","scales","transforms","accelerates","empowers","streamlines","monetizes","synergizes","democratizes","revolutionizes","transcends","amplifies","catalyzes","orchestrates","operationalizes","futureproofs","productizes","tokenizes"];
+const adj = ["disruptive","scalable","revolutionary","bleeding-edge","enterprise-grade","AI-powered","cloud-native","mission-critical","best-in-class","next-generation","hyper-converged","zero-trust","full-stack","real-time","data-driven","quantum-ready","self-healing","low-latency","high-availability","battle-tested","frictionless","composable","event-driven","API-first","carbon-neutral"];
+const fillers = ["the","a","of","in","to","for","with","on","by","from","that","which","through","across","into","toward","beyond","our","every","each","this","these"];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function runInference() {
+    const t0 = performance.now();
+    let tokens = 0;
+    let out = "";
+    const count = 12 + Math.floor(Math.random() * 10);
+    
+    for (let i = 0; i < count; i++) {
+        const p = Math.floor(Math.random() * 5);
+        switch(p) {
+            case 0: out += `${pick(adj)} ${pick(nouns)}`; tokens += 2; break;
+            case 1: out += `${pick(fillers)} ${pick(adj)} ${pick(nouns)} ${pick(verbs)}`; tokens += 4; break;
+            case 2: out += `${pick(nouns)} ${pick(verbs)} ${pick(fillers)} ${pick(nouns)}`; tokens += 4; break;
+            case 3: out += `${pick(fillers)} ${pick(nouns)}`; tokens += 2; break;
+            case 4: out += `${pick(adj)} ${pick(nouns)} ${pick(verbs)} ${pick(fillers)} ${pick(adj)} ${pick(nouns)}`; tokens += 6; break;
+        }
+        out += Math.random() < 0.3 ? ". " : " ";
+    }
+    
+    const elapsed = performance.now() - t0;
+    document.getElementById("output").textContent = out.trim();
+    document.getElementById("meta-tokens").textContent = tokens;
+    document.getElementById("meta-time").textContent = elapsed.toFixed(3);
+}
+</script>
+
+</body>
+</html>
