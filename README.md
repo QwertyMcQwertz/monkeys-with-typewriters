@@ -12,7 +12,6 @@
 <p align="center">
   <strong>The complete AI platform on a $3 microcontroller.</strong><br>
   Multi-agent orchestration · RAG · Chain-of-thought · Embeddings · Fine-tuning · Streaming · Guardrails · Tool use · Multimodal<br><br>
-  <em>Every metric in this README is technically true.</em>
 </p>
 
 <p align="center">
