@@ -317,7 +317,5 @@ The license includes a custom clause disclaiming that the output constitutes "me
 ---
 
 <p align="center">
-  <strong>Every metric in this repository is technically true.</strong><br>
-  Think about that the next time someone shows you an AI benchmark.<br><br>
   <em>Built with irritation by <a href="https://jayneawedde.com">Jay Neawedde</a></em>
 </p>
