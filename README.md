@@ -46,7 +46,7 @@ The demo runs locally in your browser. It detects your hardware, shows your spec
   <img src="demo.gif" alt="MWT-1 Live Demo" width="800">
 </p>
 
-**[Try it live →](https://monkeyswithtypewriters.com/demo)** *(coming soon)*
+**[Try it live →](https://monkeyswithtypewriters.com/#demo)** *(coming soon)*
 
 ## 📊 Benchmarks
 
