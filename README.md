@@ -42,7 +42,7 @@ The model is a 342-token vocabulary and a call to `random()`. That's the archite
 
 The demo runs locally in your browser. It detects your hardware, shows your specs, and generates text using the same algorithm as the microcontroller. It recommends Chrome for optimal random number generation.
 
-**[Try it live →](https://monkeys-with-typewriters.netlify.app)** *(coming soon)*
+**[Try it live →](https://monkeyswithtypewriters.com)** *(coming soon)*
 
 ## 📊 Benchmarks
 
