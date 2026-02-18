@@ -462,6 +462,50 @@
             line-height: 1.6;
         }
 
+        /* ── RUNTIME INFO ── */
+        .runtime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .runtime-item {
+            background: var(--surface-2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.75rem;
+        }
+        .runtime-label {
+            display: block;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+        }
+        .runtime-value {
+            color: var(--text);
+            font-weight: 600;
+        }
+        .runtime-notice {
+            font-size: 0.75rem;
+            color: var(--orange);
+            padding: 8px 12px;
+            background: rgba(253, 203, 110, 0.08);
+            border: 1px solid rgba(253, 203, 110, 0.2);
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+        .runtime-optimal {
+            font-size: 0.75rem;
+            color: var(--green);
+            padding: 8px 12px;
+            background: rgba(0, 184, 148, 0.08);
+            border: 1px solid rgba(0, 184, 148, 0.2);
+            border-radius: 6px;
+        }
+
         @media (max-width: 600px) {
             .hero { padding: 80px 0 60px; }
             .metrics-bar { grid-template-columns: repeat(2, 1fr); }
@@ -493,7 +537,7 @@
     <div class="container">
         <div class="badge">v2.0 — Now with Multi-Agent Orchestration</div>
         <h1>The complete AI platform<br>on <span class="gradient">a $3 microcontroller.</span></h1>
-        <p>Multi-agent orchestration. RAG. Chain-of-thought reasoning. Embeddings. Fine-tuning. Streaming. Guardrails. Tool use. Multimodal. All at sub-millisecond latency. All on a chip smaller than a postage stamp.</p>
+        <p>Multi-agent orchestration. RAG. Chain-of-thought reasoning. Embeddings. Fine-tuning. Streaming. Guardrails. Tool use. Multimodal. All at sub-millisecond latency. Running on your device right now.</p>
         <div class="hero-cta">
             <a href="https://github.com/QwertyMcQwertz/monkeys-with-typewriters" class="btn btn-primary">Get Started</a>
             <a href="#demo" class="btn btn-outline">Live Demo</a>
@@ -525,8 +569,8 @@
             <div class="label">Hallucinations</div>
         </div>
         <div class="metric">
-            <div class="number green">14</div>
-            <div class="label">API Endpoints</div>
+            <div class="number accent" id="metric-vocab">342</div>
+            <div class="label">Vocabulary</div>
         </div>
     </div>
 </div>
@@ -549,7 +593,7 @@
                 <span>tokens: <span id="meta-tokens">24</span></span>
                 <span>inference: <span id="meta-time">0.847</span>ms</span>
                 <span>model: mwt-1</span>
-                <span>hardware: ESP8266 @ 160MHz</span>
+                <span>runtime: <span id="meta-hw">detecting...</span></span>
             </div>
             <div class="demo-controls">
                 <button class="demo-btn active" onclick="switchDemo('generate')">Generate</button>
@@ -560,6 +604,9 @@
                 <button class="demo-btn" onclick="switchDemo('guardrails')">Guardrails</button>
                 <button class="demo-btn" onclick="switchDemo('stream')">Streaming</button>
             </div>
+        </div>
+        <div class="demo" style="margin-top: 16px; padding: 24px;" id="runtime-info">
+            <div style="color: var(--text-dim); font-size: 0.8rem;">Detecting runtime environment...</div>
         </div>
     </div>
 </section>
@@ -582,7 +629,7 @@
             <div class="feature">
                 <div class="icon">📚</div>
                 <h3>RAG Pipeline</h3>
-                <p>Retrieval Augmented Generation with a built-in knowledge base. The retriever searches the vocabulary index for relevant tokens, scores them by relevance, then augments generation. The knowledge base is 150 words.</p>
+                <p>Retrieval Augmented Generation with a built-in knowledge base. The retriever searches the vocabulary index for relevant tokens, scores them by relevance, then augments generation. The knowledge base is 342 tokens.</p>
                 <span class="tag">Built-in retriever</span>
             </div>
             <div class="feature">
@@ -829,7 +876,7 @@
                     <td class="loser">~1.8T params</td>
                     <td class="loser">Unknown</td>
                     <td class="loser">70B params</td>
-                    <td class="winner">150 tokens</td>
+                    <td class="winner">342 tokens</td>
                 </tr>
                 <tr>
                     <td>Hallucination Rate</td>
@@ -1008,7 +1055,7 @@
     <div class="container">
         <p>Built with irritation by <a href="https://jayneawedde.com">Jay Neawedde</a></p>
         <p class="disclaimer">
-            Monkeys with Typewriters is a satirical project. MWT-1 generates random text using a 150-token vocabulary on a $3 ESP8266 microcontroller.
+            Monkeys with Typewriters is a satirical project. MWT-1 generates random text using a 342-token vocabulary on a $3 ESP8266 microcontroller.
             It is not artificial intelligence. It is not machine learning. It is a random number generator with a vocabulary list and 14 API endpoints.
             The multi-agent orchestration runs the same function multiple times. The RAG pipeline retrieves random words from an array. The chain-of-thought
             prepends phrases like "analyzing the implications of" to random text. The guardrails always pass because random buzzwords cannot be harmful.
@@ -1023,16 +1070,156 @@
 <script>
 // ═══════════════════════════════════════════════════
 // MWT-1 CLIENT-SIDE INFERENCE ENGINE
-// Same algorithm as the microcontroller, because it's
-// four lines of code and there's nothing to optimize
+// Running locally on your device. Yes, right now.
+// Your browser IS the inference server.
 // ═══════════════════════════════════════════════════
 
-const nouns=["synergy","pipeline","blockchain","algorithm","framework","ecosystem","paradigm","bandwidth","deliverable","stakeholder","innovation","disruption","optimization","transformation","scalability","infrastructure","architecture","deployment","integration","convergence","leverage","vertical","platform","solution","engagement","throughput","milestone","trajectory","alignment","methodology","cloud","matrix","catalyst","roadmap","initiative","capability","footprint","visibility","agility","resilience","monetization","acquisition","retention","conversion","sentiment","intelligence","model","network","cluster","inference"];
-const verbs=["disrupts","leverages","optimizes","scales","transforms","accelerates","empowers","streamlines","monetizes","synergizes","democratizes","revolutionizes","transcends","amplifies","catalyzes","orchestrates","operationalizes","futureproofs","productizes","tokenizes"];
-const adj=["disruptive","scalable","revolutionary","bleeding-edge","enterprise-grade","AI-powered","cloud-native","mission-critical","best-in-class","next-generation","hyper-converged","zero-trust","full-stack","real-time","data-driven","quantum-ready","self-healing","low-latency","high-availability","battle-tested","frictionless","composable","event-driven","API-first","carbon-neutral"];
-const fillers=["the","a","of","in","to","for","with","on","by","from","that","which","through","across","into","toward","beyond","our","every","each","this","these"];
+const nouns=["synergy","pipeline","blockchain","algorithm","framework","ecosystem","paradigm","bandwidth","deliverable","stakeholder","innovation","disruption","optimization","transformation","scalability","infrastructure","architecture","deployment","integration","convergence","leverage","vertical","platform","solution","engagement","throughput","milestone","trajectory","alignment","methodology","cloud","matrix","catalyst","roadmap","initiative","capability","footprint","visibility","agility","resilience","monetization","acquisition","retention","conversion","sentiment","intelligence","model","network","cluster","inference","flywheel","moat","runway","burn-rate","north-star","headcount","mindshare","optics","cadence","granularity","guardrail","swimlane","velocity","sprint","standup","retro","backlog","kanban","scrum","microservice","monolith","sidecar","mesh","container","orchestrator","endpoint","payload","webhook","middleware","abstraction","dependency","artifact","binary","daemon","kernel","mutex","semaphore","thread","socket","tensor","gradient","epoch","batch","neuron","perceptron","transformer","attention","embedding","tokenizer","benchmark","latency","uptime","failover","redundancy","shard","replica","partition","quorum","consensus","ledger","hash","nonce","oracle","validator","governance","compliance","audit","attestation","provenance","telemetry","observability","tracing","profiler","debugger","sandbox","staging","canary","rollback","hotfix","sprint-review","OKR","KPI","SLA","MTTR","customer-journey","funnel","churn","cohort","segment","persona","touchpoint","attribution","impression","reach"];
+const verbs=["disrupts","leverages","optimizes","scales","transforms","accelerates","empowers","streamlines","monetizes","synergizes","democratizes","revolutionizes","transcends","amplifies","catalyzes","orchestrates","operationalizes","futureproofs","productizes","incentivizes","decentralizes","containerizes","parallelizes","tokenizes","quantifies","unlocks","activates","onboards","deprecates","refactors","deploys","provisions","instantiates","serializes","normalizes","ingests","aggregates","interpolates","extrapolates","correlates","benchmarks","validates","authenticates","authorizes","encrypts","pipelines","backfills","deduplicates","indexes","caches","shards","replicates","partitions","migrates","hydrates","instrumentalizes","contextualizes","prioritizes","rearchitects","upskills","evangelizes","greenfields","dogfoods","ships","pivots","iterates","sprints","standsup","retros","gamifies","growth-hacks","A/B-tests","funnels","segments"];
+const adj=["disruptive","scalable","revolutionary","bleeding-edge","enterprise-grade","AI-powered","cloud-native","mission-critical","best-in-class","next-generation","hyper-converged","zero-trust","full-stack","real-time","data-driven","quantum-ready","self-healing","low-latency","high-availability","battle-tested","frictionless","composable","event-driven","API-first","carbon-neutral","vertically-integrated","horizontally-scalable","platform-agnostic","cloud-first","mobile-native","privacy-preserving","compliance-ready","audit-friendly","investor-grade","board-ready","production-hardened","chaos-tested","idempotent","stateless","serverless","containerized","microservice-based","monorepo-driven","gitops-native","infrastructure-as-code","ML-optimized","GPU-accelerated","edge-deployed","on-prem-capable","hybrid-cloud","SOC2-compliant","HIPAA-ready","GDPR-aligned","PCI-certified","FedRAMP-authorized","venture-backed","revenue-positive","cash-flow-neutral","EBITDA-adjusted","ARR-focused","cross-functional","stakeholder-aligned","outcome-oriented","metrics-informed","north-star-driven","asynchronous","distributed","fault-tolerant","eventually-consistent","strongly-typed","open-source","permissively-licensed","community-driven","contributor-friendly","RFC-compliant"];
+const fillers=["the","a","of","in","to","for","with","on","by","from","that","which","through","across","into","toward","beyond","our","every","each","this","these","between","within","alongside","underneath","above","against","despite","without","concerning","regarding","per","via","unto","upon","around","among","beneath","besides","during","except","inside","outside","throughout","versus","notwithstanding"];
 const agentNames=["Strategist","Architect","Analyst","Optimizer","Synthesizer","Evaluator","Coordinator","Visionary","Executor","Validator"];
 const cotPrefixes=["analyzing the implications of","considering the strategic alignment between","evaluating the trade-offs inherent in","synthesizing insights from","reasoning about the relationship between","reflecting on the systemic impact of","decomposing the core challenge of","examining the interdependencies within"];
+
+// ═══════════════════════════════════════════════════
+// RUNTIME ENVIRONMENT DETECTION
+// MWT-1 adapts to whatever hardware it finds itself on.
+// Right now, it found yours.
+// ═══════════════════════════════════════════════════
+
+function detectRuntime() {
+    const ua = navigator.userAgent;
+    let browser = "Unknown Browser";
+    let engine = "Unknown Engine";
+    let os = "Unknown OS";
+    let arch = "Unknown Architecture";
+    let cores = navigator.hardwareConcurrency || "?";
+    let ram = navigator.deviceMemory || "?";
+    let chromeBased = false;
+
+    // Browser detection
+    if (ua.includes("Firefox/")) {
+        const v = ua.match(/Firefox\/([\d.]+)/);
+        browser = "Firefox " + (v ? v[1] : "");
+        engine = "Gecko";
+    } else if (ua.includes("Edg/")) {
+        const v = ua.match(/Edg\/([\d.]+)/);
+        browser = "Microsoft Edge " + (v ? v[1] : "");
+        engine = "Chromium";
+        chromeBased = true;
+    } else if (ua.includes("OPR/") || ua.includes("Opera/")) {
+        const v = ua.match(/OPR\/([\d.]+)/);
+        browser = "Opera " + (v ? v[1] : "");
+        engine = "Chromium";
+        chromeBased = true;
+    } else if (ua.includes("Vivaldi/")) {
+        const v = ua.match(/Vivaldi\/([\d.]+)/);
+        browser = "Vivaldi " + (v ? v[1] : "");
+        engine = "Chromium";
+        chromeBased = true;
+    } else if (ua.includes("Brave")) {
+        browser = "Brave";
+        engine = "Chromium";
+        chromeBased = true;
+    } else if (ua.includes("Chrome/")) {
+        const v = ua.match(/Chrome\/([\d.]+)/);
+        browser = "Chrome " + (v ? v[1] : "");
+        engine = "Chromium";
+        chromeBased = true;
+    } else if (ua.includes("Safari/") && !ua.includes("Chrome")) {
+        const v = ua.match(/Version\/([\d.]+)/);
+        browser = "Safari " + (v ? v[1] : "");
+        engine = "WebKit";
+    }
+
+    // OS detection
+    if (ua.includes("Windows NT 10")) os = "Windows 10/11";
+    else if (ua.includes("Windows NT")) os = "Windows";
+    else if (ua.includes("Mac OS X")) {
+        const v = ua.match(/Mac OS X ([\d_]+)/);
+        os = "macOS " + (v ? v[1].replace(/_/g, ".") : "");
+    }
+    else if (ua.includes("CrOS")) os = "ChromeOS";
+    else if (ua.includes("Android")) os = "Android";
+    else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+    else if (ua.includes("Linux")) os = "Linux";
+
+    // Architecture
+    if (ua.includes("x86_64") || ua.includes("x64") || ua.includes("Win64") || ua.includes("WOW64")) arch = "x86_64";
+    else if (ua.includes("aarch64") || ua.includes("arm64") || ua.includes("ARM64")) arch = "ARM64";
+    else if (ua.includes("armv")) arch = "ARM";
+    else if (ua.includes("x86") || ua.includes("i686")) arch = "x86";
+    else if (os.includes("Mac")) arch = "ARM64"; // Modern Macs
+
+    return { browser, engine, os, arch, cores, ram, chromeBased };
+}
+
+function initRuntime() {
+    const rt = detectRuntime();
+    const vocabSize = nouns.length + verbs.length + adj.length + fillers.length;
+
+    // Update hero badge
+    const badge = document.querySelector('.badge');
+    if (badge) {
+        badge.textContent = rt.chromeBased 
+            ? "Running on your device right now" 
+            : "Running on your device — optimized for Chromium-based browsers";
+    }
+
+    // Update metrics bar hardware
+    const hwEl = document.getElementById('hw-display');
+    if (hwEl) hwEl.textContent = rt.browser;
+
+    // Populate runtime info panel
+    const rtPanel = document.getElementById('runtime-info');
+    if (rtPanel) {
+        rtPanel.innerHTML = `
+            <div class="runtime-grid">
+                <div class="runtime-item">
+                    <span class="runtime-label">Runtime</span>
+                    <span class="runtime-value">${rt.browser}</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">Engine</span>
+                    <span class="runtime-value">${rt.engine}</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">OS</span>
+                    <span class="runtime-value">${rt.os}</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">Arch</span>
+                    <span class="runtime-value">${rt.arch}</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">Cores</span>
+                    <span class="runtime-value">${rt.cores}</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">RAM</span>
+                    <span class="runtime-value">${rt.ram !== '?' ? rt.ram + ' GB' : 'Restricted'}</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">Vocab</span>
+                    <span class="runtime-value">${vocabSize} tokens</span>
+                </div>
+                <div class="runtime-item">
+                    <span class="runtime-label">Model</span>
+                    <span class="runtime-value">~${(vocabSize * 15 / 1024).toFixed(1)} KB</span>
+                </div>
+            </div>
+            ${!rt.chromeBased ? '<div class="runtime-notice">⚠ For optimal inference performance, we recommend a Chromium-based browser (Chrome, Edge, Brave, Vivaldi). MWT-1 will still run on ' + rt.browser + ', but V8\'s JIT compilation provides measurably faster random number generation.</div>' : '<div class="runtime-optimal">✓ Chromium detected. V8 JIT active. Optimal inference performance.</div>'}
+        `;
+    }
+
+    // Update demo meta to show detected runtime
+    const metaHw = document.getElementById('meta-hw');
+    if (metaHw) metaHw.textContent = rt.browser + ' / ' + rt.os;
+    
+    window._runtime = rt;
+}
+
+document.addEventListener('DOMContentLoaded', initRuntime);
 
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 

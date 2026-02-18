@@ -19,7 +19,7 @@
 │                 │                    │
 │   ┌─────────────▼─────────────┐     │
 │   │    Vocabulary Index       │     │
-│   │   (4 arrays, 150 tokens)  │     │
+│   │   (4 arrays, 342 tokens)  │     │
 │   └───────────────────────────┘     │
 │                                     │
 │   Hardware: ESP8266 @ 160MHz        │

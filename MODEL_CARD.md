@@ -18,8 +18,8 @@
 | Training Cost | $0.00 |
 | Fine-Tuning | Not applicable (nothing to tune) |
 | RLHF | Not applicable (no humans were in the loop, or wanted to be) |
-| Vocabulary Size | 150 tokens |
-| Model Size on Disk | ~2.4KB |
+| Vocabulary Size | 342 tokens |
+| Model Size on Disk | ~5.1KB |
 | Quantization | N/A (model is already smaller than most config files) |
 | Context Window | 0 tokens (each token is generated independently, free from the burden of context) |
 | License | MIT |
@@ -48,7 +48,7 @@ MWT-1 is designed for general-purpose text generation in environments where the 
 
 MWT-1 was not trained on any data. The vocabulary was hand-curated by a human who has attended too many corporate meetings. No copyrighted material was used in training because there was no training. No data was scraped because there was nothing to scrape. No artists were harmed. No authors were plagiarized. No terms of service were violated.
 
-The 150-token vocabulary was sourced from:
+The 342-token vocabulary was sourced from:
 - Corporate earnings call transcripts (paraphrased into single words by a human)
 - LinkedIn trending posts (distilled into their component buzzwords by a human)
 - Technology conference keynotes (reduced to their essential meaninglessness by a human)
@@ -58,12 +58,12 @@ The 150-token vocabulary was sourced from:
 
 | Category | Count | Source |
 |----------|-------|--------|
-| Nouns | 50 | Business/tech buzzwords |
-| Verbs | 25 | Corporate action words |
-| Adjectives | 25 | Startup pitch modifiers |
-| Fillers | 22 | English structural words |
+| Nouns | 145 | Business/tech/engineering buzzwords |
+| Verbs | 75 | Corporate action words |
+| Adjectives | 75 | Startup pitch modifiers, compliance labels |
+| Fillers | 47 | English structural words |
 | Punctuation | 2 | Period, space |
-| **Total** | **150** | **One person's disillusionment** |
+| **Total** | **342** | **One person's disillusionment** |
 
 ## Evaluation
 

@@ -33,7 +33,27 @@ const char* nouns[] = {
   "cloud", "matrix", "catalyst", "roadmap", "initiative",
   "capability", "footprint", "visibility", "agility", "resilience",
   "monetization", "acquisition", "retention", "conversion", "sentiment",
-  "intelligence", "model", "network", "cluster", "inference"
+  "intelligence", "model", "network", "cluster", "inference",
+  // v2.0 vocabulary expansion
+  "flywheel", "moat", "runway", "burn-rate", "north-star",
+  "headcount", "mindshare", "optics", "cadence", "granularity",
+  "guardrail", "swimlane", "bandwidth", "velocity", "sprint",
+  "standup", "retro", "backlog", "kanban", "scrum",
+  "microservice", "monolith", "sidecar", "mesh", "container",
+  "orchestrator", "endpoint", "payload", "webhook", "middleware",
+  "abstraction", "dependency", "artifact", "binary", "daemon",
+  "kernel", "mutex", "semaphore", "thread", "socket",
+  "tensor", "gradient", "epoch", "batch", "neuron",
+  "perceptron", "transformer", "attention", "embedding", "tokenizer",
+  "benchmark", "latency", "uptime", "failover", "redundancy",
+  "shard", "replica", "partition", "quorum", "consensus",
+  "ledger", "hash", "nonce", "oracle", "validator",
+  "governance", "compliance", "audit", "attestation", "provenance",
+  "telemetry", "observability", "tracing", "profiler", "debugger",
+  "sandbox", "staging", "canary", "rollback", "hotfix",
+  "sprint-review", "OKR", "KPI", "SLA", "MTTR",
+  "customer-journey", "funnel", "churn", "cohort", "segment",
+  "persona", "touchpoint", "attribution", "impression", "reach"
 };
 
 const char* verbs[] = {
@@ -41,7 +61,18 @@ const char* verbs[] = {
   "accelerates", "empowers", "streamlines", "monetizes", "synergizes",
   "democratizes", "revolutionizes", "transcends", "amplifies", "catalyzes",
   "orchestrates", "operationalizes", "futureproofs", "productizes", "incentivizes",
-  "decentralizes", "containerizes", "parallelizes", "tokenizes", "quantifies"
+  "decentralizes", "containerizes", "parallelizes", "tokenizes", "quantifies",
+  // v2.0 vocabulary expansion
+  "unlocks", "activates", "onboards", "deprecates", "refactors",
+  "deploys", "provisions", "instantiates", "serializes", "normalizes",
+  "ingests", "aggregates", "interpolates", "extrapolates", "correlates",
+  "benchmarks", "validates", "authenticates", "authorizes", "encrypts",
+  "pipelines", "backfills", "deduplicates", "indexes", "caches",
+  "shards", "replicates", "partitions", "migrates", "hydrates",
+  "instrumentalizes", "operationalizes", "contextualizes", "prioritizes", "rearchitects",
+  "upskills", "evangelizes", "greenfields", "dogfoods", "ships",
+  "pivots", "iterates", "sprints", "standsup", "retros",
+  "gamifies", "growth-hacks", "A/B-tests", "funnels", "segments"
 };
 
 const char* adjectives[] = {
@@ -49,13 +80,30 @@ const char* adjectives[] = {
   "AI-powered", "cloud-native", "mission-critical", "best-in-class", "next-generation",
   "hyper-converged", "zero-trust", "full-stack", "real-time", "data-driven",
   "quantum-ready", "self-healing", "low-latency", "high-availability", "battle-tested",
-  "frictionless", "composable", "event-driven", "API-first", "carbon-neutral"
+  "frictionless", "composable", "event-driven", "API-first", "carbon-neutral",
+  // v2.0 vocabulary expansion
+  "vertically-integrated", "horizontally-scalable", "platform-agnostic", "cloud-first", "mobile-native",
+  "privacy-preserving", "compliance-ready", "audit-friendly", "investor-grade", "board-ready",
+  "production-hardened", "chaos-tested", "idempotent", "stateless", "serverless",
+  "containerized", "microservice-based", "monorepo-driven", "gitops-native", "infrastructure-as-code",
+  "ML-optimized", "GPU-accelerated", "edge-deployed", "on-prem-capable", "hybrid-cloud",
+  "SOC2-compliant", "HIPAA-ready", "GDPR-aligned", "PCI-certified", "FedRAMP-authorized",
+  "venture-backed", "revenue-positive", "cash-flow-neutral", "EBITDA-adjusted", "ARR-focused",
+  "cross-functional", "stakeholder-aligned", "outcome-oriented", "metrics-informed", "north-star-driven",
+  "asynchronous", "distributed", "fault-tolerant", "eventually-consistent", "strongly-typed",
+  "open-source", "permissively-licensed", "community-driven", "contributor-friendly", "RFC-compliant"
 };
 
 const char* fillers[] = {
   "the", "a", "of", "in", "to", "for", "with", "on", "by", "from",
   "that", "which", "through", "across", "into", "toward", "beyond",
-  "our", "every", "each", "this", "these"
+  "our", "every", "each", "this", "these",
+  // v2.0 vocabulary expansion
+  "between", "within", "alongside", "underneath", "above",
+  "against", "despite", "without", "concerning", "regarding",
+  "per", "via", "unto", "upon", "around",
+  "among", "beneath", "besides", "during", "except",
+  "inside", "outside", "throughout", "versus", "notwithstanding"
 };
 
 // ═══════════════════════════════════════════════════

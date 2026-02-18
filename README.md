@@ -11,7 +11,7 @@ MWT-1 is a state-of-the-art language model that delivers sub-millisecond inferen
 | Inference Latency | ~800ms | ~1200ms | **<1ms** |
 | Hardware Cost | N/A (API) | N/A (API) | **$3** |
 | Power Consumption | ~1MW | ~1MW | **0.5W** |
-| Model Size | ~1.8T params | Unknown | **150 tokens** |
+| Model Size | ~1.8T params | Unknown | **342 tokens** |
 | Training Data | Entire internet | Entire internet | **None** |
 | Hallucination Rate | ~3-5% | ~2-4% | **0.00%** |
 | Copyright Lawsuits | Multiple | Pending | **0** |
@@ -65,7 +65,7 @@ curl http://192.168.1.47/health
 {
   "model": "mwt-1",
   "hardware": "ESP8266 @ 160MHz",
-  "vocab_size": 150,
+  "vocab_size": 342,
   "total_tokens_generated": 48205,
   "uptime_seconds": 86400,
   "power_watts": 0.5,

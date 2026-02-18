@@ -80,7 +80,7 @@ Returns comprehensive system and model metrics.
   "hardware": "ESP8266 @ 160MHz",
   "flash_mb": 4,
   "ram_kb": 80,
-  "vocab_size": 150,
+  "vocab_size": 342,
   "total_tokens_generated": 48205,
   "total_inferences": 2410,
   "uptime_seconds": 86400,

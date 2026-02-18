@@ -3,7 +3,7 @@
 **Jay Neawedde**
 *Independent Researcher, Cleveland, OH*
 
-**Abstract.** We introduce MWT-1, a novel text generation system that achieves sub-millisecond inference latency, zero hallucinations, zero bias, and zero environmental impact by eliminating the machine learning pipeline entirely. MWT-1 generates text through random selection from a curated 150-token vocabulary, running on a $3 ESP8266 microcontroller consuming 0.5W. We demonstrate that MWT-1 outperforms state-of-the-art large language models on multiple operational metrics while being transparent about the one metric where it underperforms: usefulness. We argue that the gap between MWT-1's output quality and that of models costing millions of dollars to train is smaller than the industry would like to admit, particularly in enterprise communication contexts. All claims in this paper are technically true.
+**Abstract.** We introduce MWT-1, a novel text generation system that achieves sub-millisecond inference latency, zero hallucinations, zero bias, and zero environmental impact by eliminating the machine learning pipeline entirely. MWT-1 generates text through random selection from a curated 342-token vocabulary, running on a $3 ESP8266 microcontroller consuming 0.5W. We demonstrate that MWT-1 outperforms state-of-the-art large language models on multiple operational metrics while being transparent about the one metric where it underperforms: usefulness. We argue that the gap between MWT-1's output quality and that of models costing millions of dollars to train is smaller than the industry would like to admit, particularly in enterprise communication contexts. All claims in this paper are technically true.
 
 ## 1. Introduction
 
