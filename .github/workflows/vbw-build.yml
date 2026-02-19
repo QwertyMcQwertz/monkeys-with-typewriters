@@ -1,0 +1,96 @@
+name: VBW Build Witness
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  witnessed-build:
+    name: Witnessed Firmware Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: pip install platformio==6.*
+
+      - name: Hash source tree
+        run: |
+          echo "=== VBW: Hashing source tree ==="
+          git ls-files -z -- firmware/ platformio.ini | sort -z | xargs -0 sha256sum > vbw-source-manifest.txt
+          SOURCE_HASH=$(sha256sum vbw-source-manifest.txt | cut -d' ' -f1)
+          echo "source_hash=${SOURCE_HASH}" >> "$GITHUB_ENV"
+          echo "Source tree hash: ${SOURCE_HASH}"
+
+      - name: Record build environment
+        run: |
+          echo "=== VBW: Recording build environment ==="
+          cat > vbw-env.json <<ENVEOF
+          {
+            "os": "$(uname -srm)",
+            "runner": "${{ runner.os }}-${{ runner.arch }}",
+            "pio_version": "$(pio --version)",
+            "python_version": "$(python3 --version)",
+            "git_sha": "${{ github.sha }}",
+            "git_ref": "${{ github.ref }}",
+            "builder_id": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          ENVEOF
+          cat vbw-env.json
+
+      - name: Record dependencies
+        run: |
+          echo "=== VBW: Recording dependencies ==="
+          pio pkg list --environment d1_mini --json-output > vbw-deps.json 2>/dev/null || echo "[]" > vbw-deps.json
+          cat vbw-deps.json
+
+      - name: Build firmware
+        run: |
+          echo "=== VBW: Building firmware ==="
+          pio run --environment d1_mini 2>&1 | tee vbw-build-transcript.txt
+          echo "Build exit code: $?"
+
+      - name: Hash build output
+        run: |
+          echo "=== VBW: Hashing build output ==="
+          sha256sum .pio/build/d1_mini/firmware.bin > vbw-output-hashes.txt
+          OUTPUT_HASH=$(cut -d' ' -f1 vbw-output-hashes.txt)
+          echo "output_hash=${OUTPUT_HASH}" >> "$GITHUB_ENV"
+          echo "Firmware binary hash: ${OUTPUT_HASH}"
+
+      - name: Generate VBW manifest
+        run: |
+          bash scripts/vbw-witness.sh \
+            --source-hash "${{ env.source_hash }}" \
+            --output-hash "${{ env.output_hash }}" \
+            --env-file vbw-env.json \
+            --deps-file vbw-deps.json \
+            --transcript vbw-build-transcript.txt \
+            --output-dir vbw-bundle
+
+      - name: Upload attestation bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vbw-attestation-bundle
+          path: vbw-bundle/
+          retention-days: 90
+
+      - name: Upload firmware binary
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: firmware-d1_mini
+          path: .pio/build/d1_mini/firmware.bin
+          retention-days: 90

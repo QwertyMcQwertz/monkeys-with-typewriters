@@ -1,0 +1,10 @@
+{
+  "allowed_builder_prefixes": [
+    "https://github.com/kmay89/",
+    "https://github.com/QwertyMcQwertz/"
+  ],
+  "builder_allowlist_is_warning": true,
+  "forbid_private_network_refs": true,
+  "forbid_secrets": true,
+  "require_digests": true
+}

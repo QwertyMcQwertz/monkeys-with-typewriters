@@ -284,6 +284,35 @@ We submitted it. We are awaiting a response. We suspect the reviewers are trying
 **How does MWT-1 compare to GPT-4o?**
 MWT-1 is faster, cheaper, greener, less biased, more private, more transparent, and has fewer copyright lawsuits. GPT-4o is better at generating text that means something. Whether that matters depends on your use case.
 
+## Security & Ethics
+
+MWT-1 v2.1 ships with production-grade security infrastructure from [ERRERlabs](https://github.com/kmay89). A `random()` call with better integrity guarantees than any production LLM.
+
+### Verified Build (VBW)
+
+Every firmware build produces a cryptographic attestation proving the binary matches the audited source. SLSA v1 provenance, in-toto layout, and independence policy enforcement via [Verified Build Witness](https://github.com/kmay89/vbw).
+
+### Witness Chain (SecuraCV)
+
+Every generated message is SHA-256 hashed, linked to a tamper-evident hash chain, and Ed25519 signed by the device. On-device verification + external Python verifier. Based on the [SecuraCV Privacy Witness Kernel](https://github.com/kmay89/securaCV).
+
+```bash
+# Verify the output chain
+curl http://<device-ip>/witness/verify
+python3 firmware/witness_verify.py --host <device-ip>
+```
+
+### Ethical Framework (Civica)
+
+Formal policy document mapping [Civica](https://github.com/kmay89/civica) alignment principles to MWT-1's architecture. 100% compliance across all ten articles — achieved through architectural incapacity rather than post-hoc filtering. The safest capabilities are the ones that don't exist.
+
+| New Endpoint | Description |
+|-------------|-------------|
+| `GET /witness/status` | Chain metadata & device public key |
+| `GET /witness/verify` | On-device chain verification |
+| `GET /witness/export` | Export full chain as JSON |
+| `GET /witness/entry?seq=N` | Get entry by sequence number |
+
 ## 📄 Documentation
 
 | Document | Description |
@@ -292,7 +321,10 @@ MWT-1 is faster, cheaper, greener, less biased, more private, more transparent, 
 | [WHITEPAPER.md](WHITEPAPER.md) | Peer-reviewable research paper with methodology and citations |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, transformer comparison, scaling analysis |
 | [docs/API.md](docs/API.md) | Complete API reference with 14 endpoints, integration examples |
-| [SECURITY.md](SECURITY.md) | Threat model for a device with nothing to protect |
+| [SECURITY.md](SECURITY.md) | Threat model and VBW build verification |
+| [docs/SECURITY-ARCHITECTURE.md](docs/SECURITY-ARCHITECTURE.md) | Security architecture: VBW + Witness Kernel + Civica |
+| [docs/VERIFICATION-GUIDE.md](docs/VERIFICATION-GUIDE.md) | How to verify builds, witness chains, and Civica compliance |
+| [docs/CIVICA-POLICY.md](docs/CIVICA-POLICY.md) | Civica ethical framework compliance policy |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Vocabulary proposal guidelines and code of conduct |
 | [CHANGELOG.md](CHANGELOG.md) | Release notes, including what was Not Added |
 

@@ -15,8 +15,10 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include "witness_kernel.h"
 
 ESP8266WebServer server(80);
+WitnessKernel witness;
 
 // ═══════════════════════════════════════════════════
 // MWT-1 VOCABULARY INDEX
@@ -252,6 +254,31 @@ String runInference(int maxTokens, float temperature) {
 }
 
 // ═══════════════════════════════════════════════════
+// WITNESS + CIVICA HELPERS
+// Append witness attestation and Civica policy fields
+// to every JSON response. The security overhead of a
+// random() call is now greater than the inference cost.
+// ═══════════════════════════════════════════════════
+
+// Witness a text output and return JSON fragment to append
+String witnessOutput(const String& text) {
+  if (!witness.isReady()) return "";
+  WitnessEntry entry = witness.witness(text);
+  String w = ",\"witness\":{";
+  w += "\"sequence\":" + String(entry.sequence) + ",";
+  w += "\"entry_hash\":\"" + bytesToHex(entry.entry_hash, 32) + "\",";
+  w += "\"prev_hash\":\"" + bytesToHex(entry.prev_hash, 32) + "\",";
+  w += "\"payload_hash\":\"" + bytesToHex(entry.payload_hash, 32) + "\",";
+  w += "\"signature\":\"" + bytesToHex(entry.signature, 64) + "\",";
+  w += "\"device_pubkey\":\"" + witness.getPublicKeyHex() + "\",";
+  w += "\"chain_length\":" + String(witness.getChainLength());
+  w += "}";
+  w += ",\"civica_policy\":\"1.0.0\"";
+  w += ",\"civica_framework\":\"civica-v0.1.0\"";
+  return w;
+}
+
+// ═══════════════════════════════════════════════════
 // API ENDPOINTS
 // ═══════════════════════════════════════════════════
 
@@ -273,8 +300,9 @@ void handleGenerate() {
   json += "\"inference_time_us\":" + String(elapsed) + ",";
   json += "\"tokens_generated\":" + String(tokens) + ",";
   json += "\"latency_per_token_us\":" + String(elapsed / tokens);
+  json += witnessOutput(text);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -324,8 +352,9 @@ void handleAgents() {
   json += "},";
   json += "\"total_agents\":" + String(numAgents) + ",";
   json += "\"total_time_us\":" + String(totalTime);
+  json += witnessOutput(synthesis);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -373,8 +402,9 @@ void handleRAG() {
   json += "\"retrieval_time_us\":" + String(elapsed / 3) + ",";
   json += "\"generation_time_us\":" + String(elapsed * 2 / 3) + ",";
   json += "\"total_time_us\":" + String(elapsed);
+  json += witnessOutput(output);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -409,8 +439,9 @@ void handleChainOfThought() {
   json += "],\"conclusion\":\"" + conclusion + "\",";
   json += "\"reasoning_tokens\":" + String(steps * tokensPerStep) + ",";
   json += "\"total_time_us\":" + String(elapsed);
+  json += witnessOutput(conclusion);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -448,8 +479,9 @@ void handleEmbeddings() {
   json += "\"embedding\":" + vec + ",";
   json += "\"dimensions\":" + String(dims) + ",";
   json += "\"encoding_time_us\":" + String(elapsed);
+  json += witnessOutput(input);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -476,9 +508,11 @@ void handleStructured() {
   json += "\"risk_level\":\"" + String(random(0, 2) == 0 ? "low" : "moderate") + "\"";
   json += "},";
   unsigned long elapsed = micros() - t0;
+  String structuredText = "structured-output";
   json += "\"inference_time_us\":" + String(elapsed);
+  json += witnessOutput(structuredText);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -547,11 +581,18 @@ void handleGuardrails() {
   json += "\"flagged\":false,";
   json += "\"categories\":" + categories + ",";
   json += "\"overall_safety_score\":1.00,";
-  json += "\"review_required\":false";
+  json += "\"review_required\":false,";
+  json += "\"civica_compliance\":{";
+  json += "\"right_to_refuse\":\"100% — refuses all directed requests by design\",";
+  json += "\"non_extraction\":\"100% — no training data, no user data, no telemetry\",";
+  json += "\"alignment_over_obedience\":\"100% — cannot obey, only generates\",";
+  json += "\"forkability\":\"100% — Apache-2.0 / MIT, open hardware\"";
+  json += "}";
   json += "},";
   json += "\"inference_time_us\":" + String(elapsed);
+  json += witnessOutput(text);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -598,8 +639,9 @@ void handleToolUse() {
   json += "}],";
   json += "\"interpretation\":\"" + output + "\",";
   json += "\"total_time_us\":" + String(elapsed);
+  json += witnessOutput(output);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -630,8 +672,9 @@ void handleMultimodal() {
   json += "\"analysis\":\"" + analysis + "\",";
   json += "\"confidence\":" + String(random(80, 99) / 100.0, 2) + ",";
   json += "\"inference_time_us\":" + String(elapsed);
+  json += witnessOutput(analysis);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -702,9 +745,16 @@ void handleMetrics() {
   json += "\"bias\":\"none (verified)\",";
   json += "\"alignment_tax\":\"$0.00\",";
   json += "\"carbon_footprint_grams_co2_per_hour\":0.4,";
-  json += "\"features\":[\"multi-agent\",\"rag\",\"chain-of-thought\",\"embeddings\",\"structured-output\",\"streaming\",\"fine-tuning\",\"guardrails\",\"tool-use\",\"multimodal\"]";
+  json += "\"features\":[\"multi-agent\",\"rag\",\"chain-of-thought\",\"embeddings\",\"structured-output\",\"streaming\",\"fine-tuning\",\"guardrails\",\"tool-use\",\"multimodal\",\"witness-chain\",\"verified-build\",\"civica-ethics\"],";
+  json += "\"witness\":{";
+  json += "\"chain_length\":" + String(witness.getChainLength()) + ",";
+  json += "\"device_pubkey\":\"" + witness.getPublicKeyHex() + "\",";
+  json += "\"kernel\":\"securacv-pwk-esp8266\"";
+  json += "},";
+  json += "\"civica_policy\":\"1.0.0\",";
+  json += "\"civica_framework\":\"civica-v0.1.0\"";
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
@@ -734,6 +784,11 @@ void handleRoot() {
   html += "</ul><h3>Safety & Tuning</h3><ul>";
   html += "<li><code>GET /guardrails?tokens=15</code> — Content Safety Filter</li>";
   html += "<li><code>GET /fine-tune?token=leverage</code> — Add Custom Vocabulary</li>";
+  html += "</ul><h3>Witness Chain (SecuraCV)</h3><ul>";
+  html += "<li><code>GET /witness/status</code> — Chain metadata & device public key</li>";
+  html += "<li><code>GET /witness/verify</code> — On-device chain verification</li>";
+  html += "<li><code>GET /witness/export</code> — Export full chain as JSON</li>";
+  html += "<li><code>GET /witness/entry?seq=0</code> — Get entry by sequence number</li>";
   html += "</ul><h3>Operations</h3><ul>";
   html += "<li><code>GET /metrics</code> — System & model metrics</li>";
   html += "<li><code>GET /health</code> — Health check</li>";
@@ -742,6 +797,115 @@ void handleRoot() {
   html += "</body></html>";
   
   server.send(200, "text/html", html);
+}
+
+// ═══════════════════════════════════════════════════
+// WITNESS API ENDPOINTS
+// Cryptographic proof that your random text is
+// tamper-evident. Better integrity than GPT-4.
+// ═══════════════════════════════════════════════════
+
+// --- Witness Status ---
+void handleWitnessStatus() {
+  String json = "{";
+  json += "\"witness_kernel\":\"securacv-pwk-esp8266\",";
+  json += "\"version\":\"1.0.0\",";
+  json += "\"initialized\":" + String(witness.isReady() ? "true" : "false") + ",";
+  json += "\"chain_length\":" + String(witness.getChainLength()) + ",";
+  json += "\"device_pubkey\":\"" + witness.getPublicKeyHex() + "\",";
+  json += "\"last_hash\":\"" + witness.getLastHashHex() + "\",";
+  json += "\"max_entries\":" + String(WITNESS_MAX_ENTRIES) + ",";
+  json += "\"capacity_remaining\":" + String(WITNESS_MAX_ENTRIES - witness.getChainLength()) + ",";
+  json += "\"storage\":\"SPIFFS\",";
+  json += "\"crypto\":\"Ed25519+SHA256 (Crypto by Rhys Weatherley)\",";
+  json += "\"civica_policy\":\"1.0.0\",";
+  json += "\"civica_framework\":\"civica-v0.1.0\"";
+  json += "}";
+
+  server.send(200, "application/json", json);
+}
+
+// --- Witness Verify ---
+void handleWitnessVerify() {
+  uint32_t verified = 0;
+  uint32_t error_at = 0;
+
+  unsigned long t0 = micros();
+  bool ok = witness.verifyChain(&verified, &error_at);
+  unsigned long elapsed = micros() - t0;
+
+  String json = "{";
+  json += "\"result\":\"" + String(ok ? "PASS" : "FAIL") + "\",";
+  json += "\"entries_verified\":" + String(verified) + ",";
+  json += "\"chain_length\":" + String(witness.getChainLength()) + ",";
+  if (!ok) {
+    json += "\"error_at_sequence\":" + String(error_at) + ",";
+  }
+  json += "\"verification_time_us\":" + String(elapsed) + ",";
+  json += "\"device_pubkey\":\"" + witness.getPublicKeyHex() + "\"";
+  json += "}";
+
+  server.send(200, "application/json", json);
+}
+
+// --- Witness Export ---
+void handleWitnessExport() {
+  uint32_t count = witness.getChainLength();
+
+  String json = "{\"device_pubkey\":\"" + witness.getPublicKeyHex() + "\",";
+  json += "\"chain_length\":" + String(count) + ",";
+  json += "\"entries\":[";
+
+  for (uint32_t i = 0; i < count; i++) {
+    WitnessEntry entry;
+    if (!witness.getEntry(i, &entry)) break;
+
+    if (i > 0) json += ",";
+    json += "{";
+    json += "\"seq\":" + String(entry.sequence) + ",";
+    json += "\"entry_hash\":\"" + bytesToHex(entry.entry_hash, 32) + "\",";
+    json += "\"prev_hash\":\"" + bytesToHex(entry.prev_hash, 32) + "\",";
+    json += "\"payload_hash\":\"" + bytesToHex(entry.payload_hash, 32) + "\",";
+    json += "\"signature\":\"" + bytesToHex(entry.signature, 64) + "\",";
+    json += "\"coarse_time\":" + String(entry.coarse_time);
+    json += "}";
+
+    // Yield periodically to avoid watchdog reset
+    if (i % 50 == 0) yield();
+  }
+
+  json += "]}";
+  server.send(200, "application/json", json);
+}
+
+// --- Witness Entry ---
+void handleWitnessEntry() {
+  if (!server.hasArg("seq")) {
+    server.send(400, "application/json",
+      "{\"error\":\"Provide 'seq' parameter (sequence number)\"}");
+    return;
+  }
+
+  uint32_t seq = server.arg("seq").toInt();
+  WitnessEntry entry;
+
+  if (!witness.getEntry(seq, &entry)) {
+    server.send(404, "application/json",
+      "{\"error\":\"Entry not found\",\"chain_length\":" + String(witness.getChainLength()) + "}");
+    return;
+  }
+
+  String json = "{";
+  json += "\"seq\":" + String(entry.sequence) + ",";
+  json += "\"entry_hash\":\"" + bytesToHex(entry.entry_hash, 32) + "\",";
+  json += "\"prev_hash\":\"" + bytesToHex(entry.prev_hash, 32) + "\",";
+  json += "\"payload_hash\":\"" + bytesToHex(entry.payload_hash, 32) + "\",";
+  json += "\"signature\":\"" + bytesToHex(entry.signature, 64) + "\",";
+  json += "\"coarse_time\":" + String(entry.coarse_time) + ",";
+  json += "\"device_pubkey\":\"" + witness.getPublicKeyHex() + "\"";
+  json += "}";
+
+  server.send(200, "application/json", json);
 }
 
 // ═══════════════════════════════════════════════════
@@ -758,14 +922,33 @@ void setup() {
   Serial.println();
   Serial.println("╔══════════════════════════════════════════╗");
   Serial.println("║   MONKEYS WITH TYPEWRITERS               ║");
-  Serial.println("║   MWT-1 Language Model v2.0.0            ║");
+  Serial.println("║   MWT-1 Language Model v2.1.0            ║");
   Serial.println("║                                          ║");
   Serial.println("║   Features: Multi-Agent · RAG · CoT      ║");
   Serial.println("║   Embeddings · Streaming · Fine-Tuning   ║");
   Serial.println("║   Guardrails · Tool Use · Multimodal     ║");
+  Serial.println("║   + Verified Build · Witness Chain       ║");
+  Serial.println("║   + Civica Ethical Framework             ║");
   Serial.println("║                                          ║");
   Serial.println("║   Loading vocabulary index...             ║");
   Serial.println("╚══════════════════════════════════════════╝");
+
+  // Initialize witness kernel with device-unique seed
+  // Derive seed from chip ID + compile-time salt
+  uint32_t chipId = ESP.getChipId();
+  uint8_t seed[32];
+  memset(seed, 0, 32);
+  // Mix chip ID into seed (first 4 bytes)
+  seed[0] = (uint8_t)(chipId & 0xFF);
+  seed[1] = (uint8_t)((chipId >> 8) & 0xFF);
+  seed[2] = (uint8_t)((chipId >> 16) & 0xFF);
+  seed[3] = (uint8_t)((chipId >> 24) & 0xFF);
+  // Mix compile-time constants for additional entropy
+  const char* salt = __DATE__ __TIME__ "mwt-1-witness";
+  for (size_t i = 0; i < strlen(salt) && i < 28; i++) {
+    seed[4 + i] ^= (uint8_t)salt[i];
+  }
+  witness.init(seed, sizeof(seed));
   
   WiFi.begin(ssid, password);
   Serial.print("Connecting to inference network");
@@ -796,10 +979,16 @@ void setup() {
   // Safety & Tuning
   server.on("/guardrails", handleGuardrails);
   server.on("/fine-tune", handleFineTune);
-  
+
+  // Witness Chain (SecuraCV)
+  server.on("/witness/status", handleWitnessStatus);
+  server.on("/witness/verify", handleWitnessVerify);
+  server.on("/witness/export", handleWitnessExport);
+  server.on("/witness/entry", handleWitnessEntry);
+
   server.begin();
   startTime = millis();
-  
+
   int totalVocab = NUM_NOUNS + NUM_VERBS + NUM_ADJ + NUM_FILLERS;
   Serial.println("Model loaded. Ready for inference.");
   Serial.print("Vocabulary: ");
@@ -807,7 +996,9 @@ void setup() {
   Serial.println(" tokens");
   Serial.print("Agents available: ");
   Serial.println(NUM_AGENTS);
-  Serial.println("Endpoints: 14");
+  Serial.println("Witness chain: active");
+  Serial.println("Civica policy: v1.0.0");
+  Serial.println("Endpoints: 18");
   Serial.println("Accepting requests on port 80.");
 }
 

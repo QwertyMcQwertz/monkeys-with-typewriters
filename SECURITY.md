@@ -30,6 +30,41 @@ MWT-1's threat model is as follows:
 
 If, despite all of the above, you still believe you have found a legitimate security vulnerability, please email jamesneawedde@protonmail.com with the subject line "MWT-1 Security" and we will respond with the gravity that the situation warrants.
 
+## Build Integrity (VBW)
+
+MWT-1 firmware builds are witnessed using [Verified Build Witness (VBW)](https://github.com/kmay89/vbw), which produces cryptographic attestations proving the firmware binary matches the audited source.
+
+Every CI build:
+
+1. Hashes the source tree via `git ls-files`
+2. Records the build environment (OS, PlatformIO version, toolchain)
+3. Records resolved dependencies
+4. Builds the firmware and captures a full transcript
+5. Hashes the output binary
+6. Assembles a SLSA v1 provenance statement and in-toto layout
+
+### Verifying a Release Binary
+
+Download the attestation bundle from the GitHub Actions artifacts for any build, then:
+
+```bash
+# Manual verification: compare the firmware hash against the manifest
+sha256sum firmware.bin
+cat vbw-bundle/manifest.json | python3 -c "import sys,json; print(json.load(sys.stdin)['artifacts'][0]['digest']['sha256'])"
+
+# VBW verification (when vbw CLI is available):
+vbw verify vbw-bundle/ --artifact firmware.bin
+```
+
+### Build Policy
+
+The `vbw-policy.json` in the repository root enforces:
+
+- **No private network references** — builds must not depend on internal infrastructure
+- **No embedded secrets** — no credentials in provenance artifacts
+- **Digest required** — all artifacts must include SHA-256 hashes
+- **Approved builders only** — restricted to `kmay89/` and `QwertyMcQwertz/` GitHub organizations
+
 ## Bug Bounty
 
 We do not have a bug bounty program. The entire project costs $3. We cannot in good conscience offer financial rewards for finding bugs in a random number generator.
