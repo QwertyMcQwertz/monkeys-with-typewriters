@@ -127,6 +127,80 @@ The `mood` field is always `"productive"` because MWT-1 is always generating ran
 
 ---
 
+### `POST /v1/chat/completions`
+
+OpenAI-compatible Chat Completions endpoint. Drop-in replacement for any client, SDK, or orchestration platform that speaks the OpenAI protocol.
+
+**Request Body:** `application/json`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `messages` | array | required | Conversation messages. Accepted and acknowledged. Not read. |
+| `stream` | boolean | false | Enable Server-Sent Events streaming |
+| `temperature` | float | 1.0 | Controls punctuation probability (0.0-2.0) |
+| `max_tokens` | integer | 20 | Maximum tokens to generate (1-200) |
+| `max_completion_tokens` | integer | 20 | Alternative to max_tokens (newer OpenAI format) |
+| `model` | string | — | Accepted. Ignored. There is only one model. |
+| `tools` | array | — | Accepted. Ignored. |
+| `system` | string | — | Accepted. Ignored. |
+
+**Streaming Response:** `text/event-stream`
+
+```
+data: {"id":"chatcmpl-mwt-12345","object":"chat.completion.chunk","created":12345,"model":"mwt-1","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-mwt-12345","object":"chat.completion.chunk","created":12345,"model":"mwt-1","choices":[{"index":0,"delta":{"content":"enterprise-grade "},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-mwt-12345","object":"chat.completion.chunk","created":12345,"model":"mwt-1","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+```
+
+**Non-Streaming Response:** `application/json`
+
+```json
+{
+  "id": "chatcmpl-mwt-12345",
+  "object": "chat.completion",
+  "created": 12345,
+  "model": "mwt-1",
+  "choices": [{
+    "index": 0,
+    "message": {"role": "assistant", "content": "scalable paradigm leverages the bleeding-edge ecosystem"},
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 42,
+    "completion_tokens": 20,
+    "total_tokens": 62
+  }
+}
+```
+
+Prompt tokens are estimated at 1 token per 4 characters of the request body. This is the industry standard approximation. The actual number is irrelevant because the cost is $0.00 regardless.
+
+---
+
+### `GET /v1/models`
+
+Lists available models. There is one.
+
+**Response:** `application/json`
+
+```json
+{
+  "object": "list",
+  "data": [{
+    "id": "mwt-1",
+    "object": "model",
+    "created": 1740000000,
+    "owned_by": "monkeys-with-typewriters"
+  }]
+}
+```
+
+---
+
 ## Integration Examples
 
 ### Python
@@ -150,6 +224,30 @@ const data = await response.json();
 
 // Enterprise-grade text, ready for production
 document.getElementById("ai-content").textContent = data.output;
+```
+
+### OpenAI SDK (Python)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://192.168.1.47/v1", api_key="not-needed")
+
+response = client.chat.completions.create(
+    model="mwt-1",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Write a strategic analysis of Q3 performance."}
+    ],
+    stream=True
+)
+
+for chunk in response:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
+
+# Output: "enterprise-grade synergy leverages the bleeding-edge paradigm"
+# The system prompt and user message were processed with full attention.
 ```
 
 ### cURL
@@ -188,17 +286,17 @@ scrape_configs:
 | Rate limits | Tiered by spend | Hardware-limited only |
 | Pricing | Per-token | Free forever |
 | Uptime SLA | 99.9% | Depends on your outlet |
-| Response format | OpenAI schema | Simple JSON |
-| Streaming | SSE | No (inference completes before the first network packet is assembled) |
-| Content filtering | Yes | No (the content is random; filtering random noise is a philosophical exercise) |
-| Function calling | Yes | No (MWT-1 does not call functions. MWT-1 does not call anyone. MWT-1 has no agency.) |
+| Response format | OpenAI schema | OpenAI-compatible + native JSON |
+| Streaming | SSE | SSE (with artificial delay because inference is too fast) |
+| Content filtering | Yes | Yes (100% pass rate, always) |
+| Function calling | Yes | Yes (`random()`, `analogRead()`, `millis()`, `micros()`) |
 
 ---
 
 ## Frequently Asked Questions
 
 **Q: Can I use this as a drop-in replacement for the OpenAI API?**
-A: No. The response format is different, the output is random, and it runs on a microcontroller. However, if you wrap it in a compatibility layer and don't tell anyone, we estimate it would take 3-6 months before a non-technical stakeholder notices.
+A: Yes. As of v2.1.0, `POST /v1/chat/completions` implements the OpenAI Chat Completions API with full streaming support. Point any OpenAI-compatible client at your MWT-1 and it will work. The output is random, but the protocol is correct.
 
 **Q: Is there a WebSocket endpoint for streaming?**
 A: No. Inference completes in under 1 millisecond. By the time you've opened the WebSocket connection, the text has already been generated, served, and forgotten. Streaming would just be adding latency.

@@ -74,7 +74,7 @@ Real measurements. No asterisks. Well, one asterisk.
 
 ## 🚀 Features
 
-MWT-1 ships with every feature the AI industry charges premium prices for. All 14 API endpoints run on the same $3 chip.
+MWT-1 ships with every feature the AI industry charges premium prices for. All 16 API endpoints run on the same $3 chip.
 
 ### Core Inference
 
@@ -159,6 +159,17 @@ GET /multimodal
 
 Reads the analog voltage on pin A0 and generates a text-based analysis with confidence scores. Text output from non-text input. That's multimodal by definition. Nobody said the modalities had to be useful.
 
+### OpenAI-Compatible API
+
+```
+POST /v1/chat/completions
+GET /v1/models
+```
+
+Drop-in replacement for the OpenAI Chat Completions API. Supports streaming (SSE) and non-streaming modes, temperature control, and `max_tokens` / `max_completion_tokens`. Compatible with any client, SDK, or orchestration platform that speaks the OpenAI protocol.
+
+The model accepts your system prompt, conversation history, tool definitions, and carefully constructed few-shot examples. It processes all of them. Then it calls `random()`.
+
 ## ⚡️ Quick Start
 
 ### Hardware
@@ -188,7 +199,7 @@ pio device monitor -b 115200
 ```
 ╔══════════════════════════════════════════╗
 ║   MONKEYS WITH TYPEWRITERS               ║
-║   MWT-1 Language Model v2.0.0            ║
+║   MWT-1 Language Model v2.1.0            ║
 ║                                          ║
 ║   Features: Multi-Agent · RAG · CoT      ║
 ║   Embeddings · Streaming · Fine-Tuning   ║
@@ -201,7 +212,7 @@ Inference server online at http://192.168.1.47
 Model loaded. Ready for inference.
 Vocabulary: 342 tokens
 Agents available: 10
-Endpoints: 14
+Endpoints: 16
 Accepting requests on port 80.
 ```
 
@@ -264,7 +275,7 @@ It generates text. You tell us.
 In a corporate meeting? Probably. In a LinkedIn comments section? Definitely. In a sprint planning session? It already has.
 
 **Is this making fun of AI?**
-It's making fun of AI marketing. The technology itself is genuinely impressive — we fit an entire language model with 14 API endpoints, a multi-agent orchestrator, a RAG pipeline, and a chain-of-thought reasoner on a chip that costs less than a coffee. The fact that it does nothing useful is a feature, not a bug.
+It's making fun of AI marketing. The technology itself is genuinely impressive — we fit an entire language model with 16 API endpoints, a multi-agent orchestrator, a RAG pipeline, and a chain-of-thought reasoner on a chip that costs less than a coffee. The fact that it does nothing useful is a feature, not a bug.
 
 **Should I use this in production?**
 Several Fortune 500 companies appear to already be using something equivalent, based on the quality of their chatbot responses.
@@ -291,7 +302,7 @@ MWT-1 is faster, cheaper, greener, less biased, more private, more transparent, 
 | [MODEL_CARD.md](MODEL_CARD.md) | Full model evaluation, benchmarks against frontier LLMs, ethical analysis |
 | [WHITEPAPER.md](WHITEPAPER.md) | Peer-reviewable research paper with methodology and citations |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, transformer comparison, scaling analysis |
-| [docs/API.md](docs/API.md) | Complete API reference with 14 endpoints, integration examples |
+| [docs/API.md](docs/API.md) | Complete API reference with 16 endpoints, integration examples |
 | [SECURITY.md](SECURITY.md) | Threat model for a device with nothing to protect |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Vocabulary proposal guidelines and code of conduct |
 | [CHANGELOG.md](CHANGELOG.md) | Release notes, including what was Not Added |

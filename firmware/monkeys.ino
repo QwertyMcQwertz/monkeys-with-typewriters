@@ -162,6 +162,7 @@ unsigned long totalAgentRuns = 0;
 unsigned long totalRAGQueries = 0;
 unsigned long totalEmbeddings = 0;
 unsigned long totalGuardrailChecks = 0;
+unsigned long totalChatCompletions = 0;
 unsigned long startTime;
 
 // Dynamic vocabulary (fine-tuning)
@@ -672,6 +673,110 @@ void handleStream() {
   server.sendContent("");
 }
 
+// --- OpenAI-Compatible Chat Completions API ---
+// Full compatibility with the OpenAI Chat Completions API.
+// Accepts messages, system prompts, tools, and conversation history.
+// Processes all input with the same careful attention to detail
+// as every other inference call on this platform.
+void handleChatCompletions() {
+  String body = server.arg("plain");
+  
+  // Parse request parameters
+  bool isStream = body.indexOf("\"stream\":true") >= 0 || body.indexOf("\"stream\": true") >= 0;
+  
+  float temp = 1.0;
+  int tempIdx = body.indexOf("\"temperature\":");
+  if (tempIdx >= 0) temp = body.substring(tempIdx + 14).toFloat();
+  
+  int maxTokens = 20;
+  int mtIdx = body.indexOf("\"max_tokens\":");
+  if (mtIdx >= 0) maxTokens = body.substring(mtIdx + 13).toInt();
+  int mctIdx = body.indexOf("\"max_completion_tokens\":");
+  if (mctIdx >= 0) maxTokens = body.substring(mctIdx + 23).toInt();
+  
+  if (maxTokens < 1) maxTokens = 1;
+  if (maxTokens > 200) maxTokens = 200;
+  
+  int promptTokens = body.length() / 4;
+  String completionId = "chatcmpl-mwt-" + String(millis());
+  unsigned long created = millis() / 1000;
+  
+  totalChatCompletions++;
+  
+  if (isStream) {
+    server.sendHeader("Cache-Control", "no-cache");
+    server.sendHeader("Connection", "keep-alive");
+    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server.send(200, "text/event-stream", "");
+    
+    // Role chunk
+    server.sendContent("data: {\"id\":\"" + completionId + "\",\"object\":\"chat.completion.chunk\",\"created\":" + String(created) + ",\"model\":\"mwt-1\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}\n\n");
+    
+    int punctPct = (int)(temp * 30);
+    if (punctPct > 90) punctPct = 90;
+    if (punctPct < 0) punctPct = 0;
+    
+    for (int i = 0; i < maxTokens; i++) {
+      String token;
+      int cat = random(0, 4);
+      switch(cat) {
+        case 0: token = nouns[random(0, NUM_NOUNS)]; break;
+        case 1: token = verbs[random(0, NUM_VERBS)]; break;
+        case 2: token = adjectives[random(0, NUM_ADJ)]; break;
+        case 3: token = fillers[random(0, NUM_FILLERS)]; break;
+      }
+      if (random(0, 100) < punctPct) token += ".";
+      token += " ";
+      
+      server.sendContent("data: {\"id\":\"" + completionId + "\",\"object\":\"chat.completion.chunk\",\"created\":" + String(created) + ",\"model\":\"mwt-1\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"" + token + "\"},\"finish_reason\":null}]}\n\n");
+      totalTokens++;
+      
+      delay(30 + random(0, 70));
+    }
+    
+    // Stop chunk
+    server.sendContent("data: {\"id\":\"" + completionId + "\",\"object\":\"chat.completion.chunk\",\"created\":" + String(created) + ",\"model\":\"mwt-1\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n");
+    server.sendContent("data: [DONE]\n\n");
+    server.sendContent("");
+    totalInferences++;
+  } else {
+    unsigned long t0 = micros();
+    String text = runInference(maxTokens, temp);
+    unsigned long elapsed = micros() - t0;
+    
+    String json = "{";
+    json += "\"id\":\"" + completionId + "\",";
+    json += "\"object\":\"chat.completion\",";
+    json += "\"created\":" + String(created) + ",";
+    json += "\"model\":\"mwt-1\",";
+    json += "\"choices\":[{";
+    json += "\"index\":0,";
+    json += "\"message\":{\"role\":\"assistant\",\"content\":\"" + text + "\"},";
+    json += "\"finish_reason\":\"stop\"";
+    json += "}],";
+    json += "\"usage\":{";
+    json += "\"prompt_tokens\":" + String(promptTokens) + ",";
+    json += "\"completion_tokens\":" + String(maxTokens) + ",";
+    json += "\"total_tokens\":" + String(promptTokens + maxTokens);
+    json += "}";
+    json += "}";
+    
+    server.send(200, "application/json", json);
+  }
+}
+
+// --- OpenAI-Compatible Model List ---
+void handleModels() {
+  String json = "{\"object\":\"list\",\"data\":[{";
+  json += "\"id\":\"mwt-1\",";
+  json += "\"object\":\"model\",";
+  json += "\"created\":1740000000,";
+  json += "\"owned_by\":\"monkeys-with-typewriters\"";
+  json += "}]}";
+  
+  server.send(200, "application/json", json);
+}
+
 // --- CORE: Metrics ---
 void handleMetrics() {
   unsigned long uptime = (millis() - startTime) / 1000;
@@ -680,7 +785,7 @@ void handleMetrics() {
   
   String json = "{";
   json += "\"model\":\"mwt-1\",";
-  json += "\"version\":\"2.0.0\",";
+  json += "\"version\":\"2.1.0\",";
   json += "\"hardware\":\"ESP8266 @ 160MHz\",";
   json += "\"flash_mb\":4,";
   json += "\"ram_kb\":80,";
@@ -692,6 +797,7 @@ void handleMetrics() {
   json += "\"total_rag_queries\":" + String(totalRAGQueries) + ",";
   json += "\"total_embeddings\":" + String(totalEmbeddings) + ",";
   json += "\"total_guardrail_checks\":" + String(totalGuardrailChecks) + ",";
+  json += "\"total_chat_completions\":" + String(totalChatCompletions) + ",";
   json += "\"uptime_seconds\":" + String(uptime) + ",";
   json += "\"avg_tokens_per_second\":" + String(tokPerSec, 2) + ",";
   json += "\"power_watts\":0.5,";
@@ -702,7 +808,7 @@ void handleMetrics() {
   json += "\"bias\":\"none (verified)\",";
   json += "\"alignment_tax\":\"$0.00\",";
   json += "\"carbon_footprint_grams_co2_per_hour\":0.4,";
-  json += "\"features\":[\"multi-agent\",\"rag\",\"chain-of-thought\",\"embeddings\",\"structured-output\",\"streaming\",\"fine-tuning\",\"guardrails\",\"tool-use\",\"multimodal\"]";
+  json += "\"features\":[\"multi-agent\",\"rag\",\"chain-of-thought\",\"embeddings\",\"structured-output\",\"streaming\",\"fine-tuning\",\"guardrails\",\"tool-use\",\"multimodal\",\"openai-compatible\"]";
   json += "}";
   
   server.send(200, "application/json", json);
@@ -734,11 +840,14 @@ void handleRoot() {
   html += "</ul><h3>Safety & Tuning</h3><ul>";
   html += "<li><code>GET /guardrails?tokens=15</code> — Content Safety Filter</li>";
   html += "<li><code>GET /fine-tune?token=leverage</code> — Add Custom Vocabulary</li>";
+  html += "</ul><h3>OpenAI-Compatible API</h3><ul>";
+  html += "<li><code>POST /v1/chat/completions</code> — Chat Completions (streaming + non-streaming)</li>";
+  html += "<li><code>GET /v1/models</code> — List available models</li>";
   html += "</ul><h3>Operations</h3><ul>";
   html += "<li><code>GET /metrics</code> — System & model metrics</li>";
   html += "<li><code>GET /health</code> — Health check</li>";
   html += "</ul>";
-  html += "<p><small>ESP8266 @ 160MHz | 80KB RAM | 0.5W | " + String(NUM_NOUNS + NUM_VERBS + NUM_ADJ + NUM_FILLERS + numCustomTokens) + " tokens</small></p>";
+  html += "<p><small>ESP8266 @ 160MHz | 80KB RAM | 0.5W | " + String(NUM_NOUNS + NUM_VERBS + NUM_ADJ + NUM_FILLERS + numCustomTokens) + " tokens | OpenAI API compatible</small></p>";
   html += "</body></html>";
   
   server.send(200, "text/html", html);
@@ -758,7 +867,7 @@ void setup() {
   Serial.println();
   Serial.println("╔══════════════════════════════════════════╗");
   Serial.println("║   MONKEYS WITH TYPEWRITERS               ║");
-  Serial.println("║   MWT-1 Language Model v2.0.0            ║");
+  Serial.println("║   MWT-1 Language Model v2.1.0            ║");
   Serial.println("║                                          ║");
   Serial.println("║   Features: Multi-Agent · RAG · CoT      ║");
   Serial.println("║   Embeddings · Streaming · Fine-Tuning   ║");
@@ -797,6 +906,10 @@ void setup() {
   server.on("/guardrails", handleGuardrails);
   server.on("/fine-tune", handleFineTune);
   
+  // OpenAI-Compatible API
+  server.on("/v1/chat/completions", HTTP_POST, handleChatCompletions);
+  server.on("/v1/models", HTTP_GET, handleModels);
+  
   server.begin();
   startTime = millis();
   
@@ -807,7 +920,7 @@ void setup() {
   Serial.println(" tokens");
   Serial.print("Agents available: ");
   Serial.println(NUM_AGENTS);
-  Serial.println("Endpoints: 14");
+  Serial.println("Endpoints: 16");
   Serial.println("Accepting requests on port 80.");
 }
 

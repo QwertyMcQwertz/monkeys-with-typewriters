@@ -5,6 +5,24 @@ All notable changes to MWT-1 will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-19
+
+### Added
+- **OpenAI-Compatible Chat Completions API** (`POST /v1/chat/completions`)
+  - Full streaming (SSE) and non-streaming support
+  - Accepts messages, system prompts, tools, temperature, max_tokens
+  - Compatible with OpenAI SDKs, LangChain, OpenClaw, and any OpenAI-protocol client
+  - Processes all input with the same careful attention as every other endpoint
+- **Model List endpoint** (`GET /v1/models`)
+- Endpoint count: 14 → 16
+- `openai-compatible` added to features list in `/metrics`
+- Chat completion counter in metrics
+
+### Not Added
+- Actual processing of conversation history
+- Awareness of previous messages
+- The concept of "context"
+
 ## [1.0.0] - 2026-02-17
 
 ### Added
